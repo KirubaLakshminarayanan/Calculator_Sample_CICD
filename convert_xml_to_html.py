@@ -28,11 +28,11 @@ def ensure_directory(directory):
     else:
         logging.info(f"Directory already exists: {directory}")
 
-# Hardcoded paths
-xml_dir = 'C:\\Reports\\SoapUI_CICD_Calculator\\XML'
-html_dir = 'C:\\Reports\\SoapUI_CICD_Calculator\\HTML'
-xslt_file = 'C:\\Users\\LKiruba\\Desktop\\SoapUI_Automation_CICD\\report-transform.xslt'
-log_dir = 'C:\\Reports\\SoapUI_CICD_Calculator\\Log'
+# Hardcoded paths 
+xml_dir = 'C:\\Reports\\CICD_SOAPUI\\XML'
+html_dir = 'C:\\Reports\\CICD_SOAPUI\\HTML'
+xslt_file = 'C:\\Users\\LKiruba\\Desktop\\Calculator_Soapui_CICD\\report-transform.xslt'
+log_dir = 'C:\\Reports\\CICD_SOAPUI\\Log'
 
 # Ensure the necessary directories exist
 ensure_directory(html_dir)
