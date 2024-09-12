@@ -2,7 +2,6 @@ import logging
 import os
 from lxml import etree
 from datetime import datetime
-import sys
 
 # Function to generate timestamped filename
 def timestamped_filename(base_path, extension):
@@ -29,15 +28,9 @@ def ensure_directory(directory):
     else:
         logging.info(f"Directory already exists: {directory}")
 
-# Get command line arguments
-if len(sys.argv) != 5:
-    raise ValueError("Expected 4 arguments: XML directory, HTML directory, timestamp, build number")
-xml_dir = sys.argv[1]
-html_dir = sys.argv[2]
-timestamp = sys.argv[3]
-build_number = sys.argv[4]
-
 # Hardcoded paths 
+xml_dir = 'C:\\Reports\\CICD_SOAPUI\\XML'
+html_dir = 'C:\\Reports\\CICD_SOAPUI\\HTML'
 xslt_file = 'C:\\Users\\LKiruba\\Desktop\\Calculator_Soapui_CICD\\report-transform.xslt'
 log_dir = 'C:\\Reports\\CICD_SOAPUI\\Log'
 
@@ -61,7 +54,7 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
-def transform_xml_to_html(xml_file, xslt_file, html_file, timestamp, build_number):
+def transform_xml_to_html(xml_file, xslt_file, html_file):
     try:
         # Check if files exist
         if not os.path.exists(xml_file):
@@ -76,16 +69,14 @@ def transform_xml_to_html(xml_file, xslt_file, html_file, timestamp, build_numbe
         xslt = etree.parse(xslt_file)
         transform = etree.XSLT(xslt)
         
-        # Pass parameters including the build number
+        # Pass the current date and time as a parameter
         params = {
-            'generation_date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            'build_number': build_number
+            'generation_date': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
         
         # Transform XML to HTML
         logging.info("Starting XML to HTML transformation")
-        html = transform(xml, generation_date=etree.XSLT.strparam(params['generation_date']),
-                         build_number=etree.XSLT.strparam(params['build_number']))
+        html = transform(xml, generation_date=etree.XSLT.strparam(params['generation_date']))
         
         # Save the HTML to a file
         logging.info(f"Saving HTML file: {html_file}")
@@ -103,4 +94,4 @@ def transform_xml_to_html(xml_file, xslt_file, html_file, timestamp, build_numbe
         logging.error(f"An unexpected error occurred: {e}")
 
 # Execute the transformation
-transform_xml_to_html(xml_file, xslt_file, html_file, timestamp, build_number)
+transform_xml_to_html(xml_file, xslt_file, html_file)

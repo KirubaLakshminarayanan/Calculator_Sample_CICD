@@ -18,11 +18,30 @@
                 </style>
             </head>
             <body>
-                <h1>Test Report for Build #<xsl:value-of select="$build_number" /></h1>
+                <h1>Test Report</h1>
                 
                 <!-- Display test suite details -->
                 <xsl:for-each select="//testsuite">
                     <h2>Test Suite: <xsl:value-of select="@name" /></h2>
+                    
+                    <!-- Display properties -->
+                    <h3>Properties</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Property Name</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <xsl:for-each select="properties/property">
+                                <tr>
+                                    <td><xsl:value-of select="@name" /></td>
+                                    <td><xsl:value-of select="@value" /></td>
+                                </tr>
+                            </xsl:for-each>
+                        </tbody>
+                    </table>
                     
                     <!-- Display test cases -->
                     <h3>Test Cases</h3>
@@ -74,9 +93,5 @@
             </body>
         </html>
     </xsl:template>
-
-    <!-- Define the parameters -->
-    <xsl:param name="generation_date"/>
-    <xsl:param name="build_number"/>
 
 </xsl:stylesheet>
