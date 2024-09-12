@@ -18,7 +18,7 @@
                 </style>
             </head>
             <body>
-                <h1>Test Report for Job: <xsl:value-of select="$job_name" /> - Build #<xsl:value-of select="$build_number" /></h1>
+                <h1>Test Report for Build #<xsl:value-of select="$build_number" /></h1>
                 
                 <!-- Display test suite details -->
                 <xsl:for-each select="//testsuite">
@@ -78,6 +78,5 @@
     <!-- Define the parameters -->
     <xsl:param name="generation_date"/>
     <xsl:param name="build_number"/>
-    <xsl:param name="job_name"/>
 
 </xsl:stylesheet>
