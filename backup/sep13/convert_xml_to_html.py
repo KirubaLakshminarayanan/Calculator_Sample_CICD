@@ -75,22 +75,35 @@ def transform_xml_to_html(xml_file, xslt_file, html_file, timestamp, build_numbe
         xml = etree.parse(xml_file)
         logging.info(f"Loading XSLT file: {xslt_file}")
         xslt = etree.parse(xslt_file)
-
-        # Transform XML to HTML
         transform = etree.XSLT(xslt)
-        result = transform(xml)
-
-        # Save the result to the HTML file
+        
+        # Pass parameters including the build number and job name
+        params = {
+            'generation_date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            'build_number': build_number,
+            'job_name': job_name
+        }
+        
+        # Transform XML to HTML
+        logging.info("Starting XML to HTML transformation")
+        html = transform(xml, generation_date=etree.XSLT.strparam(params['generation_date']),
+                         build_number=etree.XSLT.strparam(params['build_number']),
+                         job_name=etree.XSLT.strparam(params['job_name']))
+        
+        # Save the HTML to a file
+        logging.info(f"Saving HTML file: {html_file}")
         with open(html_file, 'wb') as f:
-            f.write(etree.tostring(result, pretty_print=True, method='html'))
-        logging.info(f"Transformation successful. HTML saved to: {html_file}")
+            f.write(etree.tostring(html, pretty_print=True))
+        logging.info("Transformation completed successfully")
 
-        # Log the transformation details
-        logging.info(f"Transformation details - Job Name: {job_name}, Build Number: {build_number}, Timestamp: {timestamp}")
-
+    except FileNotFoundError as e:
+        logging.error(e)
+    except etree.XMLSyntaxError as e:
+        logging.error(f"XML syntax error: {e}")
+    except etree.XSLTParseError as e:
+        logging.error(f"XSLT parse error: {e}")
     except Exception as e:
-        logging.error(f"Error during XML to HTML transformation: {str(e)}")
-        raise
+        logging.error(f"An unexpected error occurred: {e}")
 
-# Perform the transformation
+# Execute the transformation
 transform_xml_to_html(xml_file, xslt_file, html_file, timestamp, build_number, job_name)
