@@ -1,0 +1,155 @@
+pipeline {
+    agent any
+
+    environment {
+        SOAPUI_HOME = "C:\\Program Files\\SmartBear\\SoapUI-5.7.2"
+        soapuiProjectPath = "C:\\Users\\LKiruba\\Desktop\\Calculator_Soapui_CICD\\Calculator-Soap-soapui-project.xml"
+        soapuiReportsPath = "C:\\Reports\\CICD_SOAPUI\\XML"
+        htmlReportsPath = "C:\\Reports\\CICD_SOAPUI\\HTML"
+        logFolderPath = "C:\\Reports\\CICD_SOAPUI\\Log"
+        pythonScriptPath = "C:\\Users\\LKiruba\\Desktop\\Calculator_Soapui_CICD\\convert_xml_to_html.py"
+        buildNumber = "${env.BUILD_NUMBER}"
+        jobName = "${env.JOB_NAME}"
+        timestamp = new Date().format('yyyyMMdd_HHmmss')
+        logFilePath = "${env.logFolderPath}\\build_${env.BUILD_NUMBER}_${env.timestamp}.log"
+        htmlReportFile = "${env.htmlReportsPath}\\report_${env.timestamp}.html"
+    }
+
+    stages {
+        stage('Clone Repository') {
+            steps {
+                script {
+                    try {
+                        git 'https://github.com/KirubaLakshminarayanan/Calculator_Sample_CICD.git'
+                        bat "echo Repository cloned successfully. >> \"${env.logFilePath}\""
+                    } catch (Exception e) {
+                        bat "echo Failed to clone repository: ${e.message} >> \"${env.logFilePath}\""
+                        throw e
+                    }
+                }
+            }
+        }
+
+        stage('Prepare Log Directory') {
+            steps {
+                script {
+                    try {
+                        bat "if not exist \"${env.logFolderPath}\" mkdir \"${env.logFolderPath}\""
+                        bat "echo Log directory prepared. >> \"${env.logFilePath}\""
+                    } catch (Exception e) {
+                        bat "echo Failed to prepare log directory: ${e.message} >> \"${env.logFilePath}\""
+                        throw e
+                    }
+                }
+            }
+        }
+
+        stage('Run SoapUI Tests') {
+            steps {
+                script {
+                    try {
+                        bat "if not exist \"${env.soapuiReportsPath}\" mkdir \"${env.soapuiReportsPath}\""
+                        bat "echo Running SoapUI tests... >> \"${env.logFilePath}\""
+                        bat "\"${env.SOAPUI_HOME}\\bin\\testrunner.bat\" -r -j -f\"${env.soapuiReportsPath}\" \"${env.soapuiProjectPath}\" >> \"${env.logFilePath}\" 2>&1"
+                        bat "echo SoapUI tests completed. >> \"${env.logFilePath}\""
+                        bat "dir \"${env.soapuiReportsPath}\" >> \"${env.logFilePath}\""
+                    } catch (Exception e) {
+                        bat "echo Failed to run SoapUI tests: ${e.message} >> \"${env.logFilePath}\""
+                        // Do not throw to ensure pipeline continues
+                    }
+                }
+            }
+        }
+
+        stage('Convert XML to HTML') {
+            steps {
+                script {
+                    try {
+                        bat "if not exist \"${env.htmlReportsPath}\" mkdir \"${env.htmlReportsPath}\""
+                        bat "echo Parameters for Python script: >> \"${env.logFilePath}\""
+                        bat "echo XML Reports Path: ${env.soapuiReportsPath} >> \"${env.logFilePath}\""
+                        bat "echo HTML Reports Path: ${env.htmlReportsPath} >> \"${env.logFilePath}\""
+                        bat "echo Build Number: ${env.buildNumber} >> \"${env.logFilePath}\""
+                        bat "echo Job Name: ${env.jobName} >> \"${env.logFilePath}\""
+                        
+                        bat "echo Converting XML to HTML... >> \"${env.logFilePath}\""
+                        bat "python \"${env.pythonScriptPath}\" \"${env.soapuiReportsPath}\" \"${env.htmlReportsPath}\" \"${env.buildNumber}\" \"${env.jobName}\" >> \"${env.logFilePath}\" 2>&1"
+                        bat "echo Conversion from XML to HTML completed. >> \"${env.logFilePath}\""
+                        bat "dir \"${env.htmlReportsPath}\" >> \"${env.logFilePath}\""
+                    } catch (Exception e) {
+                        bat "echo Failed to convert XML to HTML: ${e.message} >> \"${env.logFilePath}\""
+                        // Continue even if the conversion fails
+                    }
+                }
+            }
+        }
+
+        stage('Archive XML Reports') {
+            steps {
+                script {
+                    try {
+                        archiveArtifacts artifacts: "${env.soapuiReportsPath}/**", allowEmptyArchive: true
+                        bat "echo XML reports archived successfully. >> \"${env.logFilePath}\""
+                    } catch (Exception e) {
+                        bat "echo Failed to archive XML reports: ${e.message} >> \"${env.logFilePath}\""
+                        // Continue to ensure the pipeline completes
+                    }
+                }
+            }
+        }
+
+        stage('Archive HTML Reports') {
+            steps {
+                script {
+                    try {
+                        archiveArtifacts artifacts: "${env.htmlReportsPath}/**", allowEmptyArchive: true
+                        bat "echo HTML reports archived successfully. >> \"${env.logFilePath}\""
+                    } catch (Exception e) {
+                        bat "echo Failed to archive HTML reports: ${e.message} >> \"${env.logFilePath}\""
+                        // Continue to ensure the pipeline completes
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                try {
+                    bat "echo Cleaning workspace... >> \"${env.logFilePath}\""
+                    cleanWs()
+                    bat "echo Workspace cleaned successfully. >> \"${env.logFilePath}\""
+                } catch (Exception e) {
+                    bat "echo Failed to clean workspace: ${e.message} >> \"${env.logFilePath}\""
+                }
+            }
+        }
+
+        success {
+            script {
+                try {
+                    mail to: 'kiruba.lakshminarayanan@gmail.com',
+                         subject: "SUCCESS: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                         body: "Good news! The job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' completed successfully. Check the reports at ${env.BUILD_URL}."
+                    bat "echo Success email sent. >> \"${env.logFilePath}\""
+                } catch (Exception e) {
+                    bat "echo Failed to send success email: ${e.message} >> \"${env.logFilePath}\""
+                }
+            }
+        }
+
+        failure {
+            script {
+                try {
+                    mail to: 'kiruba.lakshminarayanan@gmail.com',
+                         subject: "FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                         body: "Unfortunately, the job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' failed. Please check the logs at ${env.BUILD_URL} for more details."
+                    bat "echo Failure email sent. >> \"${env.logFilePath}\""
+                } catch (Exception e) {
+                    bat "echo Failed to send failure email: ${e.message} >> \"${env.logFilePath}\""
+                }
+            }
+        }
+    }
+}
