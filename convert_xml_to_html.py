@@ -30,13 +30,15 @@ def ensure_directory(directory):
         logging.info(f"Directory already exists: {directory}")
 
 # Get command line arguments
-if len(sys.argv) != 6:
-    raise ValueError("Expected 5 arguments: XML directory, HTML directory, timestamp, build number, job name")
+if len(sys.argv) != 8:
+    raise ValueError("Expected 7 arguments: XML directory, HTML directory, timestamp, build number, job name, test status, test reason")
 xml_dir = sys.argv[1]
 html_dir = sys.argv[2]
 timestamp = sys.argv[3]
 build_number = sys.argv[4]
 job_name = sys.argv[5]
+test_status = sys.argv[6]
+test_reason = sys.argv[7]
 
 # Hardcoded paths 
 xslt_file = 'C:\\Users\\LKiruba\\Desktop\\Calculator_Soapui_CICD\\report-transform.xslt'
@@ -62,7 +64,7 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
-def transform_xml_to_html(xml_file, xslt_file, html_file, timestamp, build_number, job_name):
+def transform_xml_to_html(xml_file, xslt_file, html_file, timestamp, build_number, job_name, test_status, test_reason):
     try:
         # Check if files exist
         if not os.path.exists(xml_file):
@@ -81,14 +83,18 @@ def transform_xml_to_html(xml_file, xslt_file, html_file, timestamp, build_numbe
         params = {
             'generation_date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             'build_number': build_number,
-            'job_name': job_name
+            'job_name': job_name,
+            'test_status': test_status,
+            'test_reason': test_reason
         }
         
         # Transform XML to HTML
         logging.info("Starting XML to HTML transformation")
         html = transform(xml, generation_date=etree.XSLT.strparam(params['generation_date']),
                          build_number=etree.XSLT.strparam(params['build_number']),
-                         job_name=etree.XSLT.strparam(params['job_name']))
+                         job_name=etree.XSLT.strparam(params['job_name']),
+                         test_status=etree.XSLT.strparam(params['test_status']),
+                         test_reason=etree.XSLT.strparam(params['test_reason']))
         
         # Save the HTML to a file
         logging.info(f"Saving HTML file: {html_file}")
@@ -106,4 +112,4 @@ def transform_xml_to_html(xml_file, xslt_file, html_file, timestamp, build_numbe
         logging.error(f"An unexpected error occurred: {e}")
 
 # Execute the transformation
-transform_xml_to_html(xml_file, xslt_file, html_file, timestamp, build_number, job_name)
+transform_xml_to_html(xml_file, xslt_file, html_file, timestamp, build_number, job_name, test_status, test_reason)
