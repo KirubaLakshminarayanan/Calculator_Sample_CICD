@@ -104,12 +104,25 @@ def transform_xml_to_html(xml_file, xslt_file, html_file, timestamp, build_numbe
 
     except FileNotFoundError as e:
         logging.error(e)
+        # Generate the HTML file even on failure to capture failure details
+        logging.info(f"Failed test: {test_reason}")
+        create_failure_html(test_status, test_reason, html_file)
     except etree.XMLSyntaxError as e:
         logging.error(f"XML syntax error: {e}")
+        create_failure_html(test_status, str(e), html_file)
     except etree.XSLTParseError as e:
         logging.error(f"XSLT parse error: {e}")
+        create_failure_html(test_status, str(e), html_file)
     except Exception as e:
         logging.error(f"An unexpected error occurred: {e}")
+        create_failure_html(test_status, str(e), html_file)
+
+def create_failure_html(test_status, test_reason, html_file):
+    """Helper function to create a basic failure HTML report."""
+    failure_content = f"<html><body><h1>Test Status: {test_status}</h1><p>Reason: {test_reason}</p></body></html>"
+    with open(html_file, 'w') as f:
+        f.write(failure_content)
+    logging.info(f"Failure HTML report generated: {html_file}")
 
 # Execute the transformation
 transform_xml_to_html(xml_file, xslt_file, html_file, timestamp, build_number, job_name, test_status, test_reason)
