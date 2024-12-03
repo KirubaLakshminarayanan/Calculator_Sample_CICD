@@ -33,7 +33,6 @@
                                 <xsl:if test="testcase[@classname]"> <th>Classname</th> </xsl:if>
                                 <th>Time</th>
                                 <th>Status</th>
-                                <th>Failure Reason</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -55,16 +54,11 @@
                                             <xsl:when test="not(failure) and not(error)">Passed</xsl:when>
                                             <xsl:when test="failure">
                                                 Failed
+                                                <xsl:if test="failure">
+                                                    <br /><strong>Reason:</strong> <xsl:value-of select="failure/@message" />
+                                                </xsl:if>
                                             </xsl:when>
                                             <xsl:otherwise>Unknown</xsl:otherwise>
-                                        </xsl:choose>
-                                    </td>
-                                    <td>
-                                        <xsl:choose>
-                                            <xsl:when test="failure">
-                                                <xsl:value-of select="failure/@message" />
-                                            </xsl:when>
-                                            <xsl:otherwise>N/A</xsl:otherwise>
                                         </xsl:choose>
                                     </td>
                                 </tr>
